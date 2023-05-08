@@ -61,6 +61,15 @@ impl Default for Config {
 impl Config {
     // Validates if all required attributes are provided
     fn validate(&self) -> anyhow::Result<()> {
+        if self.host.is_unspecified() {
+            anyhow::bail!("missing host")
+        }
+        if self.port == 0 {
+            anyhow::bail!("missing port")
+        }
+        if self.log_level.is_empty() {
+            anyhow::bail!("missing log level")
+        }
         Ok(())
     }
 }
@@ -84,6 +93,7 @@ pub fn load() -> anyhow::Result<Config> {
     // initialize logger
     env_logger::builder()
         .filter_level(log::LevelFilter::from_str(&cfg.log_level)?)
+        .format_target(false)
         .init();
 
     Ok(cfg)
