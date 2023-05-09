@@ -29,6 +29,8 @@ Testing with HTTP client supporting JSON serialization. Available in dev mode (t
 
     $ cargo add --dev reqwest --features json
 
+SQL database integration. `sqlx` library provides sync and async queries, and compile time checking
+
 # How to run it?
 
 Run with configuration file

@@ -22,6 +22,8 @@ struct Subscription {
 
 // Subscribes a new user
 // If some fields are missing the 400 Bad Request is returned automatically
+// Before calling `subscribe` `actix_web` invokes the `from_request` for the input parameter. The
+// `from_request` tries to deserialize the body into a JSON
 async fn subscribe(subscription: web::Json<Subscription>) -> HttpResponse {
     log::info!("{:?}", subscription);
     HttpResponse::Ok().finish()
