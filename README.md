@@ -38,6 +38,18 @@ Postgresql client (required to check if postgresql is ready to accept commands)
 
     $ sudo apt install -y Postgresql-client
 
+# Configure the database
+
+    $ export DATABASE_URL=postgres://postgres:password@127.0.0.1:5432/newsletter
+
+## Add new migration
+
+    $ sqlx migrate add create_subscriptions_table
+
+## Apply all migrations
+
+    $ sqlx migrate run
+
 # How to run it?
 
 Run with configuration file

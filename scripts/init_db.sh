@@ -10,6 +10,7 @@ if ! [ -x "$(command -v psql)" ]; then
     echo >&2 "Error: psql is not installed"
     exit 1
 fi
+
 # check if sqlx is installed
 if ! [ -x "$(command -v sqlx)" ]; then
     echo >&2 "Error: sqlx is not installed"
@@ -17,7 +18,7 @@ if ! [ -x "$(command -v sqlx)" ]; then
 fi
 
 # check if custom user has been set, otherwise default to 'postgres'
-DB_USER=${POSTGRES_USER:=postgres}
+DB_USER="${POSTGRES_USER:=postgres}"
 # check if custom password has been set, otherwise default to 'password'
 DB_PASSWORD="${POSTGRES_PASSWORD:=password}"
 # check if custom database name has been set, otherwise default to 'newsletter'
@@ -28,13 +29,15 @@ DB_PORT="${DB_PORT:=5432}"
 DB_HOST="${POSTGRES_HOST:=localhost}"
 
 # launch postgres using docker
-docker run \
-    -e POSTGRES_USER=${DB_USER} \
-    -e POSTGRES_PASSWORD=${DB_PASSWORD} \
-    -e POSTGRES_DB=${DB_NAME} \
-    -p "${DB_PORT}":5432 \
-    -d postgres \
-    postgres -N 1000
+if [[ -z "${SKIP_DOCKER}" ]]; then
+    docker run \
+        -e POSTGRES_USER=${DB_USER} \
+        -e POSTGRES_PASSWORD=${DB_PASSWORD} \
+        -e POSTGRES_DB=${DB_NAME} \
+        -p "${DB_PORT}":5432 \
+        -d postgres \
+        postgres -N 1000
+fi
 
 # ping postgres until it is ready to accept commands
 export PGPASSWORD="${DB_PASSWORD}"
@@ -49,3 +52,6 @@ done
 DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
 export DATABASE_URL
 sqlx database create
+sqlx migrate run
+
+>&2 echo "Postgres has been migrated, ready to go"
