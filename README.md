@@ -31,6 +31,13 @@ Testing with HTTP client supporting JSON serialization. Available in dev mode (t
 
 SQL database integration. `sqlx` library provides sync and async queries, and compile time checking
 
+    # only for postgres
+    $ cargo install sqlx-cli --no-default-features --features native-tls,postgres
+
+Postgresql client (required to check if postgresql is ready to accept commands)
+
+    $ sudo apt install -y Postgresql-client
+
 # How to run it?
 
 Run with configuration file
