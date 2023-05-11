@@ -40,15 +40,27 @@ Postgresql client (required to check if postgresql is ready to accept commands)
 
 # Configure the database
 
+## Step by step
+
     $ export DATABASE_URL=postgres://postgres:password@127.0.0.1:5432/newsletter
 
-## Add new migration
+### Add new migration
 
     $ sqlx migrate add create_subscriptions_table
 
-## Apply all migrations
+### Apply all migrations
 
     $ sqlx migrate run
+
+## Being a part of ./scripts/init_db.sh
+
+Run database (docker based) and all migration in one step:
+
+    $ ./scripts/init_db.sh
+
+Run migration scripts and skip running already started database:
+
+    $ SKIP_DOCKER=true ./scripts/init_db.sh
 
 # How to run it?
 
