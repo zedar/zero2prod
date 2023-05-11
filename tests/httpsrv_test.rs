@@ -3,12 +3,16 @@ use std::{
     net::{Ipv4Addr, SocketAddr, TcpListener},
 };
 
-use zero2prod::{adapters::httpsrv, config::Config};
+use sqlx::{Connection, PgConnection};
+use zero2prod::{
+    adapters::httpsrv,
+    config::{Config, DbConfig},
+};
 
 #[tokio::test]
 async fn test_health_check() {
     // arrange
-    let app_addr = spawn_app();
+    let (app_addr, _) = spawn_app();
 
     // get a HTTP client
     let client = reqwest::Client::new();
@@ -26,8 +30,11 @@ async fn test_health_check() {
 #[tokio::test]
 async fn test_subscribe_success() {
     // Arrange environment
-    let app_addr = spawn_app();
+    let (app_addr, db_connstr) = spawn_app();
     let client = reqwest::Client::new();
+    let mut dbconn = PgConnection::connect(&db_connstr)
+        .await
+        .expect("Failed to connect to Postgres database");
 
     // Act
     let mut map = HashMap::new();
@@ -42,12 +49,20 @@ async fn test_subscribe_success() {
         .expect("Failed to execute request");
 
     assert_eq!(200, response.status().as_u16());
+
+    let saved = sqlx::query!("SELECT email, name FROM subscriptions",)
+        .fetch_one(&mut dbconn)
+        .await
+        .expect("Failed to fetch saved subcription");
+
+    assert_eq!(saved.email, "alice@0xlab.xyz");
+    assert_eq!(saved.name, "Alice");
 }
 
 #[tokio::test]
 async fn test_subscribe_errors() {
     // Arrange environment
-    let app_addr = spawn_app();
+    let (app_addr, _db_connstr) = spawn_app();
     let client = reqwest::Client::new();
     let test_cases = vec![
         (r#"{"name": "Alice"}"#, "missing email"),
@@ -74,13 +89,20 @@ async fn test_subscribe_errors() {
 }
 
 // Launch application in the background
-// Returns local address of the HTTP server
-fn spawn_app() -> String {
+// Returns local address of the HTTP server and database connection string
+fn spawn_app() -> (String, String) {
     // arrange config with port 0, means that unix-like system should assign a random port
     let cfg = Config {
         host: std::net::IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
         port: 0,
         log_level: "info".to_string(),
+        db: DbConfig {
+            username: "postgres".to_string(),
+            password: "password".to_string(),
+            host: "localhost".to_string(),
+            port: 5432,
+            name: "newsletter".to_string(),
+        },
     };
     let listener = TcpListener::bind(SocketAddr::new(cfg.host, cfg.port))
         .expect("Failed to bind to random port");
@@ -92,5 +114,5 @@ fn spawn_app() -> String {
     // tokio::spawn returns a handle to the spawned future
     let _ = tokio::spawn(server);
 
-    local_addr
+    (local_addr, cfg.db.connection_string())
 }
