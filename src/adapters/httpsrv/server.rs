@@ -2,7 +2,7 @@ use std::net::TcpListener;
 
 use actix_web::{dev::Server, web, App, HttpRequest, HttpResponse, HttpServer, Responder};
 use chrono::Utc;
-use sqlx::PgConnection;
+use sqlx::PgPool;
 use uuid::Uuid;
 
 // Responds with Hello {name}! or Hello World! if no /{name} is providec.
@@ -29,11 +29,11 @@ struct Subscription {
 // `from_request` tries to deserialize the body into a JSON
 async fn subscribe(
     subscription: web::Json<Subscription>,
-    db_conn: web::Data<PgConnection>,
+    db_conn_pool: web::Data<PgPool>,
 ) -> HttpResponse {
     log::info!("{:?}", subscription);
 
-    sqlx::query!(
+    let res = sqlx::query!(
         r#"
         INSERT INTO subscriptions (id, email, name, subscribed_at) VALUES ($1,$2,$3,$4)
         "#,
@@ -42,16 +42,24 @@ async fn subscribe(
         subscription.name,
         Utc::now()
     )
-    .execute(db_conn.get_ref())
+    // get_ref() i used to take an immutable reference
+    // sqlx has an async interface, but it does not allow to run concurrent queries
+    .execute(db_conn_pool.get_ref())
     .await;
 
-    HttpResponse::Ok().finish()
+    match res {
+        Ok(_) => HttpResponse::Ok().finish(),
+        Err(err) => {
+            log::error!("Failed to register subscription {}", err);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
 }
 
 // Creates an HTTP server that should be called with an await keyword
-pub fn run(listener: TcpListener, db_conn: PgConnection) -> anyhow::Result<Server> {
-    // wrap the connection in a smart pointer e.k.a Arc::
-    let db_conn = web::Data::new(db_conn);
+pub fn run(listener: TcpListener, db_conn_pool: PgPool) -> anyhow::Result<Server> {
+    // wrap the database connection pool in a smart pointer e.k.a Arc::
+    let db_conn_pool = web::Data::new(db_conn_pool);
     let local_addr = listener.local_addr()?;
     let server = HttpServer::new(move || {
         App::new()
@@ -60,7 +68,7 @@ pub fn run(listener: TcpListener, db_conn: PgConnection) -> anyhow::Result<Serve
             .route("/", web::get().to(greet))
             .route("/{name}", web::get().to(greet))
             // get a smart pointer and attach it to the application state
-            .app_data(db_conn.clone())
+            .app_data(db_conn_pool.clone())
     })
     .listen(listener)?
     .run();

@@ -158,6 +158,14 @@ impl DbConfig {
             self.username, self.password, self.host, self.port, self.name
         )
     }
+
+    // Constructs a connection to the server not a dedicated database
+    pub fn server_connection_string(&self) -> String {
+        format!(
+            "postgres://{}:{}@{}:{}",
+            self.username, self.password, self.host, self.port
+        )
+    }
 }
 
 pub fn load() -> anyhow::Result<Config> {
