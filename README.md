@@ -34,9 +34,19 @@ SQL database integration. `sqlx` library provides sync and async queries, and co
     # only for postgres
     $ cargo install sqlx-cli --no-default-features --features native-tls,postgres
 
+`sqlx` validates SQL queries at compile time, that's why it needs `DATABASE_URL` env variable defined.
+
 Postgresql client (required to check if postgresql is ready to accept commands)
 
     $ sudo apt install -y Postgresql-client
+
+uuid generator
+
+    $ cargo add uuid --features v4
+
+chrono for timestamps in current timezone
+
+    $ cargo add chrono --features clock
 
 # Configure the database
 
