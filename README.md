@@ -19,11 +19,14 @@ Easier results with errors
 
     $ cargo add anyhow
 
-
 Logger
 
     $ cargo add env_logger
     $ cargo add log
+
+Tracing - this is an alternative to the logging crate which allows to record structured events with additional information.
+
+    $ cargo add tracing --features log
 
 Testing with HTTP client supporting JSON serialization. Available in dev mode (tests)
 

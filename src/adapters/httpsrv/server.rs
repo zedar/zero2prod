@@ -1,6 +1,8 @@
 use std::net::TcpListener;
 
-use actix_web::{dev::Server, web, App, HttpRequest, HttpResponse, HttpServer, Responder};
+use actix_web::{
+    dev::Server, middleware::Logger, web, App, HttpRequest, HttpResponse, HttpServer, Responder,
+};
 use chrono::Utc;
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -31,13 +33,15 @@ async fn subscribe(
     subscription: web::Json<Subscription>,
     db_conn_pool: web::Data<PgPool>,
 ) -> HttpResponse {
-    log::info!("{:?}", subscription);
+    let req_id = Uuid::new_v4();
+
+    log::info!("request: {}, new subscription: {:?}", req_id, subscription);
 
     let res = sqlx::query!(
         r#"
         INSERT INTO subscriptions (id, email, name, subscribed_at) VALUES ($1,$2,$3,$4)
         "#,
-        Uuid::new_v4(),
+        req_id,
         subscription.email,
         subscription.name,
         Utc::now()
@@ -48,9 +52,23 @@ async fn subscribe(
     .await;
 
     match res {
-        Ok(_) => HttpResponse::Ok().finish(),
+        Ok(_) => {
+            log::info!(
+                "request {}, subscription added: {}, {}",
+                req_id,
+                subscription.email,
+                subscription.name
+            );
+            HttpResponse::Ok().finish()
+        }
         Err(err) => {
-            log::error!("Failed to register subscription {}", err);
+            log::error!(
+                "request {}, failed to register subscription: {}, {}, error: {}",
+                req_id,
+                subscription.email,
+                subscription.name,
+                err
+            );
             HttpResponse::InternalServerError().finish()
         }
     }
@@ -63,6 +81,7 @@ pub fn run(listener: TcpListener, db_conn_pool: PgPool) -> anyhow::Result<Server
     let local_addr = listener.local_addr()?;
     let server = HttpServer::new(move || {
         App::new()
+            .wrap(Logger::default())
             .route("/health_check", web::get().to(health_check))
             .route("/subscriptions", web::post().to(subscribe))
             .route("/", web::get().to(greet))
