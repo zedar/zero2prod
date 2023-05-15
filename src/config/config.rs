@@ -81,7 +81,7 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Config {
-            host: IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)),
+            host: IpAddr::V4(Ipv4Addr::UNSPECIFIED),
             port: 8000,
             log_level: "info".to_string(),
             db: DbConfig::default(),
@@ -92,9 +92,9 @@ impl Default for Config {
 impl Config {
     // Validates if all required attributes are provided
     fn validate(&self) -> anyhow::Result<()> {
-        if self.host.is_unspecified() {
-            anyhow::bail!("missing host")
-        }
+        // if self.host.is_unspecified() {
+        // anyhow::bail!("missing host")
+        // }
         if self.port == 0 {
             anyhow::bail!("missing port")
         }

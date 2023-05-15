@@ -32,12 +32,18 @@ Testing with HTTP client supporting JSON serialization. Available in dev mode (t
 
     $ cargo add --dev reqwest --features json
 
-SQL database integration. `sqlx` library provides sync and async queries, and compile time checking
+SQL database integration. `sqlx` library provides sync and async queries, and compile time checking.
 
     # only for postgres
     $ cargo install sqlx-cli --no-default-features --features native-tls,postgres
 
-`sqlx` validates SQL queries at compile time, that's why it needs `DATABASE_URL` env variable defined.
+`sqlx` validates SQL queries at compile time, that's why it needs `DATABASE_URL` env variable defined. The alternative is the `offline` mode.
+
+    $ cargo install sqlx-cli --no-default-features --features native-tls,postgres,offline
+
+In order to make the `offline` mode working we need to use the `sqlx prepare` command that generates query metadata to support `offline` compile-time verification.
+
+    $ cargo sqlx prepare -- --lib
 
 Postgresql client (required to check if postgresql is ready to accept commands)
 
@@ -50,6 +56,16 @@ uuid generator
 chrono for timestamps in current timezone
 
     $ cargo add chrono --features clock
+
+# Cleaning unsued Dependencies
+
+Install cargo tools
+
+    $ cargo install cargo-udeps
+
+Run dependency analyzer (required +nightly)
+
+    $ cargo +nightly udeps
 
 # Configure the database
 

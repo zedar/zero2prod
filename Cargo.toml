@@ -33,7 +33,8 @@ features = [
     "postgres",
     "uuid",
     "chrono",
-    "migrate"
+    "migrate",
+    "offline"
 ]
 # runtime-tokio - sqlx to use tokio runtime, macros gives access to sqlx::query!|query_as!, postgres - unlocks postgres specific features, uuid - adds support for UUIDs
 # chrono - adds support for timestamptz to the DateTime<T> type, migrate - gives access to the same functions that are used by sqlx migrate
