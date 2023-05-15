@@ -6,7 +6,7 @@ use zero2prod::{adapters::httpsrv, config};
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let cfg = config::load()?;
-    log::info!("{:?}", cfg);
+    log::info!("Configuration {:?}", cfg);
 
     // build database connection pool
     let db_conn_pool = PgPool::connect(&cfg.db.connection_string()).await?;

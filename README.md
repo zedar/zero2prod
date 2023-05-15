@@ -100,3 +100,22 @@ Run with configuration file
 Run with configuration file and some attribute overwritten
 
     $ cargo run -- --cfg config/local_cfg.yaml --log_level debug --port 8090 --host 0.0.0.0
+
+# Build with docker
+
+Build docker image
+
+    $ docker build -t zero2prod -f ./docker/Dockerfile
+
+Change configuration to support locally running Postgres database.
+Use `host: host.docker.internal` instead of `localhost`. The option `--network=host` does not work with Mac desktop.
+
+Run application
+
+    $ docker run -it -p 8080:8080 -v {path_to_folder_with_configs}:/config zero2prod --cfg /config/local_docker_cfg.yaml
+
+Example request:
+
+```
+$ curl -v -XPOST -H "content-type: application/json" -d '{"email":"bob@0xlab.xyz", "name": "Bob"}' http://localhost:8080/subscriptions
+```

@@ -1,5 +1,9 @@
-target
-docker/**
+.env
+target/
+tests/
+docker/
+scripts/
+migrations/
 .dockerignore
 .git
 .gitignore

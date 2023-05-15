@@ -5,5 +5,5 @@ db:
   username: postgres
   password: password
   port: 5432
-  host: localhost 
+  host: host.docker.internal 
   name: newsletter
